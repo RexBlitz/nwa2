@@ -6,20 +6,19 @@ class Config {
                 company: 'Dawium Technologies',
                 prefix: '.',
                 version: '3.0.0',
-                owner: '923075417411@s.whatsapp.net',
+                owner: '19099094524@s.whatsapp.net',
                 clearAuthOnStart: false
             },
 
             auth: {
-                usePairingCode: true,
-                phoneNumber: 923075417411,
                 useMongoAuth: true,
                 clearAuthOnStart: false
             },
 
+
             // ✅ AI / Jarvis Config
             ai: {
-                enabled: true,
+                enabled: false,
                 persona: 'friendly_jarvis',
                 gemini: {
                     // ✅ Best place to store your API key
@@ -43,20 +42,20 @@ class Config {
                 autoReply: false,
                 autoViewStatus: false,
                 telegramBridge: true,
-                respondToUnknownCommands: true,
+                respondToUnknownCommands: false,
                 sendPermissionError: false
             },
 
             mongo: {
                 uri: 'mongodb+srv://irexanon:xUf7PCf9cvMHy8g6@rexdb.d9rwo.mongodb.net/?retryWrites=true&w=majority&appName=RexDB',
-                dbName: 'RexWA'
+                dbName: 'nwa2'
             },
 
             telegram: {
                 enabled: true,
-                botToken: '8340169817:AAE3p5yc0uSg-FOZMirWVu9sj9x4Jp8CCug',
+                botToken: '7631564418:AAH70ES8tYXeDA-18KCHhTnx81Qov_mjZwI',
                 botPassword: '1122',
-                chatId: '-1002846269080',
+                chatId: '-1002783833178',
                 logChannel: '-100000000000',
                 features: {
                     topics: true,
