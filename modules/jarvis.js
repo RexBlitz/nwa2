@@ -181,52 +181,63 @@ You are Jarvis: concise, helpful, slightly witty, never rude. Avoid long paragra
   }
 
   // --- Hooks ---
-  async onNlp(msg, text, bot) {
-    try {
-      if (!this.state.enabled) return;
-      if (!text?.trim()) return;
+// --- Hooks ---
+async onNlp(msg, text, bot) {
+  try {
+    if (!this.state.enabled) return;
+    if (!text?.trim()) return;
 
-      const jid = msg.key.remoteJid;
+    const jid = msg.key.remoteJid;
+
+    // ✅ DO NOT mark read here (removed)
+    try {
+      await this.bot.sock.presenceSubscribe(jid);
+      await this.bot.sock.sendPresenceUpdate('composing', jid);
+    } catch {}
+
+    const manifest = buildManifest(this.bot);
+    const routed = await this.routeIntent(text, manifest);
+
+    // ✅ Command mode
+    if (routed?.action === 'command' && routed?.command) {
+      const found = findCommandHandler(this.bot, routed.command);
+      const params = Array.isArray(routed.args) ? routed.args : [];
 
       try {
-        await this.bot.sock.readMessages([msg.key]);
-        await this.bot.sock.presenceSubscribe(jid);
-        await this.bot.sock.sendPresenceUpdate('composing', jid);
-      } catch {}
-
-      const manifest = buildManifest(this.bot);
-      const routed = await this.routeIntent(text, manifest);
-
-      if (routed?.action === 'command' && routed?.command) {
-        const found = findCommandHandler(this.bot, routed.command);
-        const params = Array.isArray(routed.args) ? routed.args : [];
-
-        try {
-          if (found?.handler) {
-            await found.handler.execute(msg, params, {
-              bot: this.bot,
-              sender: jid,
-              participant: msg.key.participant || jid,
-              isGroup: jid.endsWith('@g.us')
-            });
-          } else {
-            await bot.sendMessage(jid, { text: routed.reply || `Could not execute ${routed.command}.` });
-          }
-        } catch (err) {
-          await bot.sendMessage(jid, { text: `❌ Error running ${routed.command}: ${err.message}` });
+        if (found?.handler) {
+          await found.handler.execute(msg, params, {
+            bot: this.bot,
+            sender: jid,
+            participant: msg.key.participant || jid,
+            isGroup: jid.endsWith('@g.us')
+          });
+        } else {
+          await bot.sendMessage(jid, { text: routed.reply || `Could not execute ${routed.command}.` });
         }
-
-        try { await this.bot.sock.sendPresenceUpdate('paused', jid); } catch {}
-        return;
+      } catch (err) {
+        await bot.sendMessage(jid, { text: `❌ Error running ${routed.command}: ${err.message}` });
       }
 
-      const reply = routed?.reply || await this.freeChat(text);
-
       try { await this.bot.sock.sendPresenceUpdate('paused', jid); } catch {}
-      await bot.sendMessage(jid, { text: reply });
 
-    } catch (e) {
-      log.error('onNlp error:', e);
+      // ✅ NOW mark read (after reply)
+      try { await this.bot.sock.readMessages([msg.key]); } catch {}
+
+      return;
     }
+
+    // ✅ Chat mode
+    const reply = routed?.reply || await this.freeChat(text);
+
+    try { await this.bot.sock.sendPresenceUpdate('paused', jid); } catch {}
+    await bot.sendMessage(jid, { text: reply });
+
+    // ✅ Mark message as read AFTER reply
+    try { await this.bot.sock.readMessages([msg.key]); } catch {}
+
+  } catch (e) {
+    log.error('onNlp error:', e);
   }
+}
+
 }
