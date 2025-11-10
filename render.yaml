@@ -5,7 +5,7 @@ services:
     plan: free
     region: frankfurt
     buildCommand: npm install
-    startCommand: node keep-alive.js & node index.js
+    startCommand: node server.js & node index.js
     autoDeploy: true
     healthCheckPath: /health
     envVars:
