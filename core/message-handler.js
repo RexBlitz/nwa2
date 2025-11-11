@@ -88,10 +88,7 @@ async processMessage(msg) {
         if (isCommand) {
             await this.handleCommand(msg, text);
         } else {
-            // Let Jarvis AI try natural language first
-            await this.executeMessageHooks('nlp', msg, text);
-
-            // Continue with normal non-command handling
+               // Continue with normal non-command handling
             await this.handleNonCommandMessage(msg, text);
         }
 
