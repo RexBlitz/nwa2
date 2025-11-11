@@ -1,1 +1,1 @@
-web: node server.js & node index.js
+web: node koyeb.js & node index.js
