@@ -8,14 +8,14 @@ const PORT = process.env.PORT || 8000;
 let REAL_URL = null;
 let BOT_HEALTHY = false;
 
-// Guess from env first (Render/Koyeb)
-if (process.env.RENDER_EXTERNAL_URL) REAL_URL = process.env.RENDER_EXTERNAL_URL;
+// Guess from env first
+
 if (process.env.KOYEB_PUBLIC_URL) REAL_URL = process.env.KOYEB_PUBLIC_URL;
 
 // Log helper
 const log = (...msg) => console.log("[KeepAlive ADV]", ...msg);
 
-// ✅ Learn REAL public URL from proxy headers (Koyeb + Render reliable)
+//  Learn REAL public URL from proxy headers (Koyeb )
 app.use((req, res, next) => {
     const proto = req.headers["x-forwarded-proto"];
     const host = req.headers["x-forwarded-host"] || req.headers.host;
@@ -24,14 +24,14 @@ app.use((req, res, next) => {
         const newURL = `${proto}://${host}`;
         if (REAL_URL !== newURL) {
             REAL_URL = newURL;
-            log("✅ Learned domain:", REAL_URL);
+            log(" Learned domain:", REAL_URL);
             restartExternalPinger();
         }
     }
     next();
 });
 
-// ✅ UI
+//  UI
 app.get("/", (req, res) => {
     const up = process.uptime();
     const h = Math.floor(up / 3600);
@@ -121,7 +121,7 @@ app.get("/", (req, res) => {
     `);
 });
 
-// ✅ Health
+// Health
 app.get("/health", (req, res) => {
     res.json({
         ok: true,
@@ -132,7 +132,7 @@ app.get("/health", (req, res) => {
     });
 });
 
-// ✅ Whoami debug
+//  Whoami debug
 app.get("/whoami", (req, res) => {
     res.json({
         detected_url: REAL_URL,
@@ -144,13 +144,13 @@ app.get("/whoami", (req, res) => {
     });
 });
 
-// ✅ Bot status endpoint
+//  Bot status endpoint
 app.post("/bot-status", (req, res) => {
     BOT_HEALTHY = req.body?.healthy !== false;
     res.json({ ok: true });
 });
 
-// ✅ Local ping (keeps Node active)
+//  Local ping (keeps Node active)
 let localTimer = null;
 function startLocalPinger() {
     if (localTimer) clearInterval(localTimer);
@@ -164,7 +164,7 @@ function startLocalPinger() {
 }
 startLocalPinger();
 
-// ✅ External pinger (only after REAL_URL learned)
+//  External pinger (only after REAL_URL learned)
 let externalTimer = null;
 
 function restartExternalPinger() {
@@ -186,7 +186,7 @@ function restartExternalPinger() {
                 res.on("data", () => {});
                 res.on("end", () => {
                     if (res.statusCode === 200) {
-                        log("✅ External ping OK");
+                        log(" External ping OK");
                     } else {
                         log("⚠️ Non-200 status:", res.statusCode);
                     }
@@ -199,7 +199,7 @@ function restartExternalPinger() {
     }, 240000); // every 4 minutes
 }
 
-// ✅ Domain verification (HEAD request) every 10 min
+// Domain verification (HEAD request) every 10 min
 setInterval(() => {
     if (!REAL_URL) return;
 
@@ -207,22 +207,22 @@ setInterval(() => {
     const proto = REAL_URL.startsWith("https") ? https : http;
 
     proto.request(checkURL, { method: "HEAD", timeout: 3000 }, (res) => {
-        if (res.statusCode === 200) log("✅ Domain verified:", REAL_URL);
-        else log("⚠️ Domain check returned:", res.statusCode);
+        if (res.statusCode === 200) log("Domain verified:", REAL_URL);
+        else log(" Domain check returned:", res.statusCode);
     }).on("error", () => {
         log("❌ Domain failed. Waiting for new whoami header...");
     }).end();
 
 }, 600000); // every 10 minutes
 
-// ✅ Start server
+//  Start server
 const server = app.listen(PORT, "0.0.0.0", () => {
     log(`Server running on ${PORT}`);
     log(`Initial URL: ${REAL_URL || "none"}`);
     if (REAL_URL) restartExternalPinger();
 });
 
-// ✅ Safe exit
+//  Safe exit
 process.on("SIGTERM", () => server.close(() => process.exit(0)));
 process.on("SIGINT", () => server.close(() => process.exit(0)));
 
